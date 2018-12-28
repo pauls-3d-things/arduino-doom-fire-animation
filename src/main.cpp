@@ -36,16 +36,18 @@ void nextZ(void) {
 
 float r, g, nr, ng, z1;
 void loop(void) {
-  z1 = z / 4.0;
-
+  z1 = z / 8.0;
+  // nextZ();
   c += 3;
-
+  tft.setCursor(40, 20);
+  tft.setTextColor(rgb(c / 3, 0, 0));
+  tft.print("@paul_3d_things");
   tft.startWrite();
   tft.setAddrWindow(0, 40, W, H);
   for (uint8_t y = 0; y < H; y += 2) {
     for (uint8_t x = 0; x < W; x++) {
       //   tft.writePixel(buffer[x + (W * y)]);
-      nr = (ip.noise2((x * 3 - 80.0) / (16.0 + z1), //
+      nr = (ip.noise2((x * 3.5 - 80.0) / (16.0 + z1), //
                       (y + c) / (16.0 + z1)) +
             1.0) /
            2.0;
