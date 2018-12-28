@@ -34,7 +34,7 @@ void nextZ(void) {
   }
 }
 
-float r, g, f, n, z1;
+float r, g, nr, ng, z1;
 void loop(void) {
   z1 = z / 4.0;
 
@@ -45,18 +45,18 @@ void loop(void) {
   for (uint8_t y = 0; y < H; y++) {
     for (uint8_t x = 0; x < W; x++) {
       //   tft.writePixel(buffer[x + (W * y)]);
-      n = (ip.noise2((x - 80) / (16.0 + z1), //
-                     (y + c) / (16.0 + z1)) +
-           1.0) /
-          2.0;
-      f = (ip.noise2((x - 80) / (8.0 + z1), //
-                     (y + c) / (8.0 + z1)) +
-           1.0) /
-          2.0;
-      g = f > 0.1 ? 64 * f : 0;
+      nr = (ip.noise2((x*1.5 - 80.0) / (16.0 + z1), //
+                      (y + c) / (16.0 + z1)) +
+            1.0) /
+           2.0;
+      ng = (ip.noise2((x*2.0 - 80.0) / (8.0 + z1), //
+                      (y + c) / (8.0 + z1)) +
+            1.0) /
+           2.0;
+      g = ng > 0.2 ? 64 * ng : 0;
       g *= (y / 500.0);
-      r = n > 0.2 ? (255 - g) * n + g : g;
-      r *= (y / 200.0);
+      r = nr > 0.3 ? (255 - g) * nr + g : g;
+      r *= (y / 300.0);
 
       tft.writePixel(rgb(r, g, 0));
     } // rgb(100,100,0)
