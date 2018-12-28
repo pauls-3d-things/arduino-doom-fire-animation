@@ -38,23 +38,23 @@ float r, g, nr, ng, z1;
 void loop(void) {
   z1 = z / 4.0;
 
-  c++;
+  c += 3;
 
   tft.startWrite();
-  tft.setAddrWindow(0, 0, W, H);
-  for (uint8_t y = 0; y < H; y++) {
+  tft.setAddrWindow(0, 40, W, H);
+  for (uint8_t y = 0; y < H; y += 2) {
     for (uint8_t x = 0; x < W; x++) {
       //   tft.writePixel(buffer[x + (W * y)]);
-      nr = (ip.noise2((x*1.5 - 80.0) / (16.0 + z1), //
+      nr = (ip.noise2((x * 3 - 80.0) / (16.0 + z1), //
                       (y + c) / (16.0 + z1)) +
             1.0) /
            2.0;
-      ng = (ip.noise2((x*2.0 - 80.0) / (8.0 + z1), //
+      ng = (ip.noise2((x * 4.0 - 80.0) / (8.0 + z1), //
                       (y + c) / (8.0 + z1)) +
             1.0) /
            2.0;
       g = ng > 0.2 ? 64 * ng : 0;
-      g *= (y / 500.0);
+      g *= (y / 400.0);
       r = nr > 0.3 ? (255 - g) * nr + g : g;
       r *= (y / 300.0);
 
