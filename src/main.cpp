@@ -11,8 +11,12 @@ void setup(void) {
 }
 
 void loop(void) {
-  tft.setCursor(30, 20);
-  tft.setTextSize(1);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.print("@pauls_3d_things");
+  tft.startWrite();
+  tft.setAddrWindow(0, 0, 160, 80);
+  for (uint8_t y = 0; y < 80; y++) {
+    for (uint8_t x = 0; x < 160; x++) {
+      tft.writePixel(ST77XX_WHITE);
+    }
+  }
+  tft.endWrite();
 }
