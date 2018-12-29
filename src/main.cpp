@@ -15,7 +15,7 @@ void loop(void) {
   tft.setAddrWindow(0, 0, 160, 80);
   for (uint8_t y = 0; y < 80; y++) {
     for (uint8_t x = 0; x < 160; x++) {
-      tft.writePixel(ST77XX_WHITE);
+      tft.writePixel(tft.color565(random(255), 0, 0));
     }
   }
   tft.endWrite();
