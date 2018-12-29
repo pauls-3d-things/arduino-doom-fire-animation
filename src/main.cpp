@@ -6,6 +6,7 @@ Adafruit_ST7735 tft = Adafruit_ST7735(D8, D0, -1);
 
 void setup(void) {
   tft.initR(INITR_MINI160x80);
+  tft.setRotation(3);
   tft.fillScreen(ST77XX_BLACK);
 }
 
