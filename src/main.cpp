@@ -19,7 +19,7 @@ void loop(void) {
   tft.setAddrWindow(0, 0, 160, 80);
   for (uint8_t y = 0; y < 80; y++) {
     for (uint8_t x = 0; x < 160; x++) {
-      tft.writePixel(rgb(255 * ((sn.noise(x, y) + 1.0) / 2.0), 0, 0));
+      tft.writePixel(rgb(255 * ((sn.noise(x / 8.0, y / 8.0) + 1.0) / 2.0), 0, 0));
     }
   }
   tft.endWrite();
