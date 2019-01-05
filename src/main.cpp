@@ -1,28 +1,14 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 #include <Arduino.h>
-#include <SimplexNoise.h>
+#include <Wire.h>
 #include <doom_image.h>
+
+#define MPUADDR 0x68
+int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
 
 #define rgb(r, g, b) tft.color565(b, g, r)
 Adafruit_ST7735 tft = Adafruit_ST7735(D8, D0, -1);
-
-float m = 0; // movement
-float r = 0; // red value
-SimplexNoise sn;
-void fireSimplexNosie(void) {
-  m += 2.5;
-  tft.startWrite();
-  tft.setAddrWindow(0, 40, 160, 40);
-  for (uint8_t y = 40; y < 80; y++) {
-    for (uint8_t x = 0; x < 160; x++) {
-      r = (((y - 40) * (y - 40) / (1200.0)) *
-           (sn.noise(x / 8.0, (y + m) / 8.0) + 1.0) / 2.0);
-      tft.writePixel(rgb(255 * r, r > .2 ? 16 * r : 0, 0));
-    }
-  }
-  tft.endWrite();
-}
 
 const uint16_t doomColorMap[36] = {
     //
@@ -65,6 +51,7 @@ const uint16_t doomColorMap[36] = {
 };
 
 uint8_t firePixels[80][160]; // only stores the pixel "temperature"
+
 void setupFirepixels(void) {
   for (uint8_t y = 0; y < 80; y++) {
     for (uint8_t x = 0; x < 160; x++) {
@@ -80,11 +67,11 @@ void fireDoom(void) {
   // recalculate fire
   for (uint8_t y = 0; y < 79; y++) {
     for (uint8_t x = 0; x < 160; x++) {
-      uint8_t wind = x + random(2);
+      uint8_t wind = x + random(2) + (abs(AcY) / 15000);
       wind = wind >= 160 ? wind - 160 : wind;
-      uint8_t speed = y + random(2);
+      uint8_t speed = y + random(2) + (abs(AcX) / 15000);
       speed = speed >= 80 ? 79 : speed;
-      firePixels[y][x] = firePixels[speed][wind] - random(2);
+      firePixels[y][x] = firePixels[speed][wind] - random(3);
       firePixels[y][x] =
           firePixels[y][x] > 35 ? 0 : firePixels[y][x]; // fix overflow
     }
@@ -109,14 +96,41 @@ void fireDoom(void) {
 }
 
 void setup(void) {
+  Wire.begin();
+  Wire.beginTransmission(MPUADDR);
+  Wire.write(0x6B); // PWR_MGMT_1 register
+  Wire.write(0);    // set to zero (wakes up the MPU-6050)
+  Wire.endTransmission(true);
+
   setupFirepixels();
   tft.initR(INITR_MINI160x80);
   tft.setRotation(3);
   tft.fillScreen(ST77XX_BLACK);
-  tft.setCursor(30, 12);
-  tft.setTextSize(1);
-  tft.setTextColor(doomColorMap[16]);
-  tft.print("@pauls_3d_things");
 }
 
-void loop(void) { fireDoom(); }
+void loop(void) {
+  Wire.beginTransmission(MPUADDR);
+  Wire.write(0x3B); // starting with register 0x3B (ACCEL_XOUT_H)
+  Wire.endTransmission(false);
+  Wire.requestFrom(MPUADDR, 14); // request a total of 14 registers
+
+  // low pass filter to remove noise:
+  AcX = AcX * 0.95 +
+        0.05 * (Wire.read() << 8 |
+                Wire.read()); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
+  AcY = AcY * 0.95 +
+        0.05 * (Wire.read() << 8 |
+                Wire.read()); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
+  AcZ = AcZ * 0.95 +
+        0.05 * (Wire.read() << 8 |
+                Wire.read()); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
+  Tmp = Wire.read() << 8 | Wire.read(); // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
+  GyX =
+      Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
+  GyY =
+      Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
+  GyZ =
+      Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+
+  fireDoom();
+}
